@@ -1,48 +1,45 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-import urllib # Necessário para formatar a string de conexão corretamente
+from sqlalchemy.orm import sessionmaker, declarative_base # <--- Alteração aqui
+import urllib
 
 # --- Configurações para SQL Server ---
-DB_SERVER = "CGUAL42872042\SQLEXPRESS01"  
-DB_DATABASE = "delivery" 
-DB_USER = None # Deixe como None se usar Autenticação do Windows
-DB_PASSWORD = None # Deixe como None se usar Autenticação do Windows
+DB_SERVER = "CGUAL42872042\\SQLEXPRESS01"
+DB_DATABASE = "delivery"
+DB_USER = None
+DB_PASSWORD = None
 
+ODBC_DRIVER = "ODBC Driver 17 for SQL Server"
 
-# Driver ODBC 
-ODBC_DRIVER = "ODBC Driver 17 for SQL Server" # Pode variar, verifique os drivers instalados!
-
-# Construção da DATABASE_URL para SQL Server com pyodbc
-if DB_USER: # Autenticação SQL Server
+if DB_USER:
     params = urllib.parse.quote_plus(
         f"DRIVER={{{ODBC_DRIVER}}};"
         f"SERVER={DB_SERVER};"
         f"DATABASE={DB_DATABASE};"
         f"UID={DB_USER};"
         f"PWD={DB_PASSWORD};"
-     
+        # Considere adicionar "TrustServerCertificate=yes;" se estiver em desenvolvimento
+        # e encontrar erros de certificado SSL/TLS. Ex:
+        # f"TrustServerCertificate=yes;"
     )
-else: # Autenticação Windows
+else:
     params = urllib.parse.quote_plus(
         f"DRIVER={{{ODBC_DRIVER}}};"
         f"SERVER={DB_SERVER};"
         f"DATABASE={DB_DATABASE};"
-        "Trusted_Connection=yes;" # Essencial para Autenticação do Windows
-        # "TrustServerCertificate=yes;" # Adicione se necessário
+        "Trusted_Connection=yes;"
+        # Considere adicionar "TrustServerCertificate=yes;" se estiver em desenvolvimento
+        # e encontrar erros de certificado SSL/TLS. Ex:
+        f"TrustServerCertificate=yes;" # <--- ADICIONEI ISSO TEMPORARIAMENTE, PODE SER NECESSÁRIO
     )
 
 DATABASE_URL = f"mssql+pyodbc:///?odbc_connect={params}"
 
-# Crie a engine do SQLAlchemy
 engine = create_engine(DATABASE_URL)
 
-# Crie uma fábrica de sessões (SessionLocal)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base para seus modelos ORM
 Base = declarative_base()
-Session = sessionmaker()
+
 
 # Função para obter uma sessão do banco de dados
 def get_db():
