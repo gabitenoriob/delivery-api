@@ -1,6 +1,8 @@
 from fastapi import FastAPI
-from auth_routes import auth_router
-from order_routes import order_router
+from routes.auth_routes import auth_router
+from openai import models
+from routes.order_routes import order_router
+from database import engine, get_db
 
 app = FastAPI()
 app.include_router(auth_router)
