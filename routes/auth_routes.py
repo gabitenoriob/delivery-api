@@ -1,10 +1,13 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from database import SessionLocal,engine, get_db, Base
 from grpc import Status
 from models import User
-from routes.schemas import SignUpModel
+from schemas import SignUpModel
 from sqlalchemy.orm import sessionmaker, declarative_base
 from werkzeug.security import generate_password_hash, check_password_hash
+from fastapi_jwt_auth import AuthJWT
+from schemas import LoginModel
+from fastapi.encoders import jsonable_encoder
 
 auth_router = APIRouter(prefix= '/auth', tags= ['auth'])
 session = SessionLocal(bind=engine)
@@ -28,3 +31,22 @@ async def sign_up(user: SignUpModel):
     session.commit()
     session.refresh(new_user)
     return new_user
+
+
+@auth_router.post('/login')
+async def login(user: LoginModel, Authorize: AuthJWT = Depends()):
+    db_user = session.query(User).filter(User.username == user.username).first()
+    if db_user and check_password_hash(db_user.password,user.password):
+        acess_token = Authorize.create_access_token(subject=db_user.username)
+        refresh_token = Authorize.create_refresh_token(subject= db_user.username)
+
+        response = {
+            "acess": acess_token,
+            "refresh": refresh_token
+        }
+    
+        return jsonable_encoder(response)
+
+    raise HTTPException(status_code=Status.HTTP_400_BAD_REQUEST, detail= "Invalid username or password")
+    
+

@@ -22,3 +22,19 @@ class SignUpModel(BaseModel):
                 "is_staff": False
             }
         }
+
+class Settings(BaseModel):
+    auth_jwt_secret_key: str = '65b580a08e4f362f64174e9b5d0259fe5210594ed355b5c680e7f2ab260f6ea9' #gerado pelo python secrets.hex()
+
+class LoginModel(BaseModel):
+    username: str
+    password: str
+
+    class Config:
+        orm_mode = True
+        schema_extra = {
+            "example": {
+                "username": "john_doe",
+                "password": "securepassword"
+            }
+        }
