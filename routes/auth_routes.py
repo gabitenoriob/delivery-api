@@ -12,7 +12,11 @@ from fastapi.encoders import jsonable_encoder
 auth_router = APIRouter(prefix= '/auth', tags= ['auth'])
 session = SessionLocal(bind=engine)
 @auth_router.get('/')
-async def hello():
+async def hello(Authorize: AuthJWT = Depends()):
+    try:
+        Authorize.jwt_required()
+    except Exception as e:
+        raise HTTPException(status_code=401, detail= "Unauthorized, invalid token")
     return "hello"
 
 @auth_router.post('/sign-up', response_model=SignUpModel, status_code=Status.HTTP_201_CREATED)
@@ -48,5 +52,18 @@ async def login(user: LoginModel, Authorize: AuthJWT = Depends()):
         return jsonable_encoder(response)
 
     raise HTTPException(status_code=Status.HTTP_400_BAD_REQUEST, detail= "Invalid username or password")
+
+@auth_router.get('/refresh_token')
+async def refresh_token(Authorize: AuthJWT = Depends()):
+    try:
+        Authorize.jwt_refresh_token_required()
+    except Exception as e:
+        raise HTTPException(status_code=401, detail= "unathorized, provide a valid refresh token")
     
+    current_user = Authorize._get_jwt_identifier()
+    
+    acess_token = Authorize.create_access_token(subject= current_user)
+
+    return jsonable_encoder({"acess": acess_token})
+
 

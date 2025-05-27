@@ -6,6 +6,7 @@ import models
 from database import engine, get_db, Base 
 from fastapi_jwt_auth import AuthJWT
 from schemas import Settings
+import schemas
 
 # Ela dirá ao SQLAlchemy para criar todas as tabelas definidas em seus modelos
 models.Base.metadata.create_all(bind=engine)
